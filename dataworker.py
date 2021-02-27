@@ -10,7 +10,9 @@ class Dataworker:
         self.__connection = sqlite3.connect(database_path)
         self.__cursor = self.__connection.cursor()
 
-    def get_pupils_info_all(self, filter_none_users: bool = False, class_id: str = None) -> list:
+    def get_pupils_info_all(self, filter_none_users: bool = False,
+                            class_id: str = None,
+                            pagination_id: (str, int) = None) -> list:
         """Getting all info about all pupils.
 
         Keyword arguments:
@@ -59,6 +61,12 @@ class Dataworker:
 
         """
         query = "SELECT * FROM 'lessons';"
+        return self.__cursor.execute(query).fetchall()
+
+    @property
+    def classes_info(self) -> list:
+        """Getting all classes list."""
+        query = "SELECT * FROM classes;"
         return self.__cursor.execute(query).fetchall()
 
     def __del__(self):
