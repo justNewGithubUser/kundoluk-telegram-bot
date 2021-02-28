@@ -19,17 +19,24 @@ class Dataworker:
         filter_none_users -- return only that pupils info which 'kundoluk_id' is not equal None
 
         Order of return values:
-        (pupil_id, first_name, last_name, kundoluk_id, class_id)
+        (pupil_id, first_name, last_name, kundoluk_id, class_id, pagination_id)
 
         """
         query = "SELECT * FROM 'pupils'"
-        if filter_none_users and class_id:
-            query += f" WHERE kundoluk_id NOT NULL AND class_id='{class_id}';"
-        else:
+        if any((filter_none_users, class_id, pagination_id)):
+            query += " WHERE"
+            if class_id:
+                if "=" in query:
+                    query += " AND"
+                query += f" class_id='{class_id}'"
+            if pagination_id:
+                if "=" in query:
+                    query += " AND"
+                query += f" pagination_id={pagination_id}"
             if filter_none_users:
-                query += " WHERE kundoluk_id NOT NULL;"
-            elif class_id:
-                query += f" WHERE class_id='{class_id}'"
+                if "=" in query:
+                    query += " AND"
+                query += " kundoluk_id NOT NULL"
         return self.__cursor.execute(query).fetchall()
 
     def get_pupil_info(self, pupil_id: (str, int)) -> tuple:
@@ -52,15 +59,14 @@ class Dataworker:
         query = f"SELECT * FROM 'lessons' WHERE lesson_id='{lesson_id}';"
         return self.__cursor.execute(query).fetchone()
 
-    @property
-    def lessons_info(self) -> list:
+    def lessons_info(self, pagination_id: (int, str)) -> list:
         """Getting all info about lessons.
 
         Order of return values:
-        (lesson_id, lesson_name, lesson_kundoluk_id, emoji_shortcode)
+        (lesson_id, lesson_name, lesson_kundoluk_id, emoji_shortcode, pagination_id)
 
         """
-        query = "SELECT * FROM 'lessons';"
+        query = f"SELECT * FROM 'lessons' WHERE pagination_id={pagination_id};"
         return self.__cursor.execute(query).fetchall()
 
     @property
@@ -68,6 +74,11 @@ class Dataworker:
         """Getting all classes list."""
         query = "SELECT * FROM classes;"
         return self.__cursor.execute(query).fetchall()
+
+    def get_class_name(self, class_id: str) -> str:
+        """Getting class_name by class_id."""
+        query = f"SELECT class_name FROM classes WHERE class_id='{class_id}'"
+        return self.__cursor.execute(query).fetchone()[0]
 
     def __del__(self):
         self.__connection.close()
@@ -77,4 +88,4 @@ if __name__ == '__main__':
     from pprint import pprint
     db = Dataworker()
     # pprint(db.get_pupils_info_all())
-    pprint(db.get_lesson_info(2))
+    pprint(db.get_pupils_info_all(class_id="10a", filter_none_users=True, pagination_id=2))
