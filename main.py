@@ -19,6 +19,7 @@ async def process_show_classes_callback(call: types.CallbackQuery):
                           "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
         await call.answer(text=answer_template, show_alert=True)
     else:
+        caller_telegram_id = call.from_user.id
         caller_first_name = call.from_user.first_name
         caller_last_name = call.from_user.last_name
         if caller_last_name:
