@@ -1,10 +1,17 @@
 import sqlite3
 from config import database_path
 
-__all__ = "Dataworker"
+__all__ = "DataWorker", "MediaWorker"
 
 
-class Dataworker:
+class MediaWorker:
+
+    @staticmethod
+    def default_profile_photo():
+        return open("media/default_profile_photo.png", "rb")
+
+
+class DataWorker:
 
     def __init__(self):
         self.__connection = sqlite3.connect(database_path)
@@ -43,7 +50,7 @@ class Dataworker:
         """Getting all info about pupil.
 
         Order of return values:
-        (pupil_id, first_name, last_name, kundoluk_id, class_id)
+        (pupil_id, first_name, last_name, kundoluk_id, class_id, pagination_id)
 
         """
         query = f"SELECT * FROM 'pupils' WHERE pupil_id={pupil_id}"
@@ -53,20 +60,22 @@ class Dataworker:
         """Getting info about lesson.
 
         Order of return values:
-        (lesson_id, lesson_name, lesson_kundoluk_id, emoji_shortcode)
+        (lesson_id, lesson_name, lesson_kundoluk_id, emoji_shortcode, pagination_id)
 
         """
         query = f"SELECT * FROM 'lessons' WHERE lesson_id='{lesson_id}';"
         return self.__cursor.execute(query).fetchone()
 
-    def lessons_info(self, pagination_id: (int, str)) -> list:
+    def lessons_info(self, pagination_id: (int, str) = None) -> list:
         """Getting all info about lessons.
 
         Order of return values:
         (lesson_id, lesson_name, lesson_kundoluk_id, emoji_shortcode, pagination_id)
 
         """
-        query = f"SELECT * FROM 'lessons' WHERE pagination_id={pagination_id};"
+        query = "SELECT * FROM 'lessons'"
+        if pagination_id is not None:
+            query += f" WHERE pagination_id={pagination_id};"
         return self.__cursor.execute(query).fetchall()
 
     @property
@@ -80,12 +89,18 @@ class Dataworker:
         query = f"SELECT class_name FROM classes WHERE class_id='{class_id}'"
         return self.__cursor.execute(query).fetchone()[0]
 
+    def get_lesson_name(self, lesson_id: (str, int)) -> str:
+        """Getting lesson_name by lesson_id."""
+        query = f"SELECT lesson_name FROM lessons WHERE lesson_id='{lesson_id}'"
+        return self.__cursor.execute(query).fetchone()[0]
+
     def __del__(self):
         self.__connection.close()
 
 
 if __name__ == '__main__':
-    from pprint import pprint
-    db = Dataworker()
+    # from pprint import pprint
+    db = DataWorker()
     # pprint(db.get_pupils_info_all())
-    pprint(db.get_pupils_info_all(class_id="10a", filter_none_users=True, pagination_id=2))
+    # pprint(db.get_pupils_info_all(class_id="10a", filter_none_users=True, pagination_id=2))
+    print(db.get_lesson_name(3))
