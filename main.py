@@ -149,47 +149,52 @@ async def process_parse_marks_callback(call: types.CallbackQuery):
 @dp.callback_query_handler(lambda call: call.data.startswith("parse_lesson_marks"))
 async def process_parse_lesson_marks_callback(call: types.CallbackQuery):
     pupil_id, caller_tg_id, lesson_id, pagination_id = call.data.split("?")[1:]
-    _, first_name, last_name, _, class_id, _ = db.get_pupil_info(pupil_id)
-    class_name = db.get_class_name(class_id)
-    lesson_name = db.get_lesson_name(lesson_id)
-    marks = await kundoluk.get_pupil_marks(pupil_id, lesson_id)
-    average_mark = kundoluk.average_mark
-    edit_text_template = f"<b>{last_name} {first_name}</b>, {class_name}\n<b>{lesson_name}</b>\n"
-    split_line = "-"*len(edit_text_template)
-    edit_text_template += split_line
-
-    for mark_date, mark_value in marks:
-        edit_text_template += f"\n{mark_date} - {mark_value}"
+    if caller_tg_id != str(call.from_user.id):
+        answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
+                          "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
+        await call.answer(text=answer_template, show_alert=True)
     else:
-        edit_text_template += f"\n{split_line}\nСредняя оценка - {average_mark}"
+        _, first_name, last_name, _, class_id, _ = db.get_pupil_info(pupil_id)
+        class_name = db.get_class_name(class_id)
+        lesson_name = db.get_lesson_name(lesson_id)
+        marks = await kundoluk.get_pupil_marks(pupil_id, lesson_id)
+        average_mark = kundoluk.average_mark
+        edit_text_template = f"<b>{last_name} {first_name}</b>, {class_name}\n<b>{lesson_name}</b>\n"
+        split_line = "-"*len(edit_text_template)
+        edit_text_template += split_line
 
-    markup = InlineKeyboardMarkup(row_width=1)
-    btn_text = "«« Назад"
-    btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?{pagination_id}"
-    back_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
-    markup.add(back_btn)
+        for mark_date, mark_value in marks:
+            edit_text_template += f"\n{mark_date} - {mark_value}"
+        else:
+            edit_text_template += f"\n{split_line}\nСредняя оценка - {average_mark}"
 
-    await call.message.edit_caption(edit_text_template, reply_markup=markup)
+        markup = InlineKeyboardMarkup(row_width=1)
+        btn_text = "«« Назад"
+        btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?{pagination_id}"
+        back_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
+        markup.add(back_btn)
+
+        await call.message.edit_caption(edit_text_template, reply_markup=markup)
 
 
-@dp.message_handler(commands=["marks"])
-async def process_marks_command(message: types.Message):
-    caller_telegram_id = message.from_user.id
-    caller_first_name = message.from_user.first_name
-    caller_last_name = message.from_user.last_name
-    if caller_last_name:
-        answer_template = f"{caller_first_name} {caller_last_name}, выберите пожалуйста класс."
-    else:
-        answer_template = f"{caller_first_name}, выберите пожалуйста класс."
+    @dp.message_handler(commands=["marks"])
+    async def process_marks_command(message: types.Message):
+        caller_telegram_id = message.from_user.id
+        caller_first_name = message.from_user.first_name
+        caller_last_name = message.from_user.last_name
+        if caller_last_name:
+            answer_template = f"{caller_first_name} {caller_last_name}, выберите пожалуйста класс."
+        else:
+            answer_template = f"{caller_first_name}, выберите пожалуйста класс."
 
-    markup = InlineKeyboardMarkup(row_width=3)
-    for cls_id, cls_name, cls_emoji in db.classes_info:
-        btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
-        btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
-        btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
-        markup.insert(btn)
+        markup = InlineKeyboardMarkup(row_width=3)
+        for cls_id, cls_name, cls_emoji in db.classes_info:
+            btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
+            btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
+            btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
+            markup.insert(btn)
 
-    await message.answer(text=answer_template, reply_markup=markup)
+        await message.answer(text=answer_template, reply_markup=markup)
 
 
 if __name__ == '__main__':

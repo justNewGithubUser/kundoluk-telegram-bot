@@ -17,5 +17,8 @@ dp = Dispatcher(bot)
 database_path = "database.db"
 
 # default profile photo file id
-default_profile_photo = "AgACAgIAAxkBAAEJPhJgO6QqH7fg1Km7DGSgzz540Y1oFwACO7I" \
-                        "xG4584UkSUoYuvjxxGF46CZ4uAAMBAAMCAANtAAOFmQACHgQ"
+# default_profile_photo = "AgACAgIAAxkBAAEJPhJgO6QqH7fg1Km7DGSgzz540Y1oFwACO7I" \
+#                         "xG4584UkSUoYuvjxxGF46CZ4uAAMBAAMCAANtAAOFmQACHgQ"
+
+default_profile_photo = "AgACAgIAAxkBAAEJQjRgPIuNukjldmm_ymCAc0UexQABZM0AAiexMRv" \
+                        "-R-FJqGY06Rrn9C16j26XLgADAQADAgADbQADvzAHAAEeBA"
