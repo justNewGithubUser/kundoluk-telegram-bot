@@ -1,0 +1,2 @@
+export TOKEN=23232
+export PASSWORD=1843

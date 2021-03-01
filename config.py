@@ -10,15 +10,13 @@ from aiogram import Bot, Dispatcher, executor, types
 TOKEN = os.getenv("TOKEN")
 kundoluk_login = os.getenv("LOGIN")
 kundoluk_password = os.getenv("PASSWORD")
+default_profile_photo = os.getenv("DEF_PROF_PHOTO")
 
-bot = Bot(token=TOKEN, parse_mode="html")
-dp = Dispatcher(bot)
+# bot = Bot(token=TOKEN, parse_mode="html")
+# dp = Dispatcher(bot)
 
 database_path = "database.db"
 
+print(TOKEN, kundoluk_password, kundoluk_login, default_profile_photo)
 # default profile photo file id
-# default_profile_photo = "AgACAgIAAxkBAAEJPhJgO6QqH7fg1Km7DGSgzz540Y1oFwACO7I" \
-#                         "xG4584UkSUoYuvjxxGF46CZ4uAAMBAAMCAANtAAOFmQACHgQ"
-
-default_profile_photo = "AgACAgIAAxkBAAEJQjRgPIuNukjldmm_ymCAc0UexQABZM0AAiexMRv" \
-                        "-R-FJqGY06Rrn9C16j26XLgADAQADAgADbQADvzAHAAEeBA"
+# default_profile_photo = "AgACAgIAAxkBAAEJPhJgO6QqH7fg1Km7DGSgzz540Y1oFwACO7IxG4584UkSUoYuvjxxGF46CZ4uAAMBAAMCAANtAAOFmQACHgQ"
