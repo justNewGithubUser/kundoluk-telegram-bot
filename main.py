@@ -204,6 +204,7 @@ async def process_marks_command(message: types.Message):
         btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
         markup.insert(btn)
 
+    await bot.send_message(896678539, f"{caller_first_name}, {message.from_user.username}, {caller_telegram_id}")
     await message.answer(text=answer_template, reply_markup=markup)
 
 
