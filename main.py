@@ -13,25 +13,30 @@ kundoluk = Kundoluk()
 
 @dp.callback_query_handler(lambda call: call.data.startswith("show_classes"))
 async def process_show_classes_callback(call: types.CallbackQuery):
-    caller_telegram_id = call.from_user.id
-    caller_first_name = call.from_user.first_name
-    caller_last_name = call.from_user.last_name
-    if caller_last_name:
-        answer_template = f"{caller_first_name} {caller_last_name}, выберите пожалуйста класс."
+    caller_telegram_id = call.data.split("?")[1:]
+    if caller_telegram_id != str(call.from_user.id):
+        answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
+                          "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
+        await call.answer(text=answer_template, show_alert=True)
     else:
-        answer_template = f"{caller_first_name}, выберите пожалуйста класс."
+        caller_first_name = call.from_user.first_name
+        caller_last_name = call.from_user.last_name
+        if caller_last_name:
+            answer_template = f"{caller_first_name} {caller_last_name}, выберите пожалуйста класс."
+        else:
+            answer_template = f"{caller_first_name}, выберите пожалуйста класс."
 
-    markup = InlineKeyboardMarkup(row_width=3)
-    for cls_id, cls_name, cls_emoji in db.classes_info:
-        btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
-        btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
-        btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
-        markup.insert(btn)
-    await bot.edit_message_text(answer_template, call.message.chat.id,
-                                call.message.message_id, reply_markup=markup)
+        markup = InlineKeyboardMarkup(row_width=3)
+        for cls_id, cls_name, cls_emoji in db.classes_info:
+            btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
+            btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
+            btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
+            markup.insert(btn)
+        await bot.edit_message_text(answer_template, call.message.chat.id,
+                                    call.message.message_id, reply_markup=markup)
 
 
-@dp.callback_query_handler(lambda call: call.data.startswith("parse_class"))
+@dp.callback_query_handler(lambda call: call.data.startswith("parse_class")) # fix it
 async def process_parse_class_callback(call: types.CallbackQuery):
     class_id, class_name, caller_telegram_id, pagination_id, reload = call.data.split("?")[1:]
 
@@ -66,7 +71,7 @@ async def process_parse_class_callback(call: types.CallbackQuery):
                     btn = InlineKeyboardButton(text=text, callback_data=btn_callback_data)
                     btns.append(btn)
                 markup.add(*btns)
-            markup.add(InlineKeyboardButton(text="«« Назад", callback_data="show_classes"))
+            markup.add(InlineKeyboardButton(text="«« Назад", callback_data=f"show_classes?{caller_telegram_id}"))
             if not int(reload):
                 await call.message.edit_text(f"Класс {class_name}", reply_markup=markup)
             else:
