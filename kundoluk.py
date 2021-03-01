@@ -69,8 +69,8 @@ class Kundoluk:
                 for lesson_id in args:
                     lesson_kundoluk_id = db.get_lesson_info(lesson_id)[2]
                     task = asyncio.create_task(self.    __request_to_lesson_page(session,
-                                                                             user_kundoluk_id,
-                                                                             lesson_kundoluk_id))
+                                                                                 user_kundoluk_id,
+                                                                                 lesson_kundoluk_id))
                     self.__tasks.append(task)
                 responses = await asyncio.gather(*self.__tasks)
         await session.close()
@@ -78,13 +78,13 @@ class Kundoluk:
         return [r.translate(format_maps["middle"]) for r in responses]
 
 
-async def main():
-    kundoluk = Kundoluk()
-    a = await kundoluk.get_pupil_marks(3, 4)
-    print(a)
-
-if __name__ == '__main__':
-    start = time()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    print(time() - start)
+# async def main():
+#     kundoluk = Kundoluk()
+#     a = await kundoluk.get_pupil_marks(3, 4)
+#     print(a)
+#
+# if __name__ == '__main__':
+#     start = time()
+#     loop = asyncio.get_event_loop()
+#     loop.run_until_complete(main())
+#     print(time() - start)

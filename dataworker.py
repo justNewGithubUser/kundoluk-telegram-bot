@@ -96,11 +96,3 @@ class DataWorker:
 
     def __del__(self):
         self.__connection.close()
-
-
-if __name__ == '__main__':
-    # from pprint import pprint
-    db = DataWorker()
-    # pprint(db.get_pupils_info_all())
-    # pprint(db.get_pupils_info_all(class_id="10a", filter_none_users=True, pagination_id=2))
-    print(db.get_lesson_name(3))
