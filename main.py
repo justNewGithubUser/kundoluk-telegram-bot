@@ -1,11 +1,14 @@
 from random import choice
 from emoji import emojize
-from aiogram import types
+from aiogram import types, Dispatcher, Bot, executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from aiogram.utils.exceptions import WrongFileIdentifier, InvalidHTTPUrlContent
-from config import dp, bot, executor, default_profile_photo
+from config import default_profile_photo, TOKEN
 from dataworker import *
 from kundoluk import Kundoluk
+
+bot = Bot(token=TOKEN, parse_mode="html")
+dp = Dispatcher(bot)
 
 db = DataWorker()
 kundoluk = Kundoluk()

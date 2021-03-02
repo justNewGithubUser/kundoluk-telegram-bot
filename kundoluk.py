@@ -1,9 +1,6 @@
 import asyncio
-from pprint import pprint
-from time import time
 import aiohttp
 import bs4
-from aiogram.types import InputMediaPhoto
 from dataworker import DataWorker
 from config import kundoluk_login, kundoluk_password
 from utils import format_maps
