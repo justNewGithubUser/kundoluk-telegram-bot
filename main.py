@@ -6,6 +6,7 @@ from aiogram.utils.exceptions import WrongFileIdentifier, InvalidHTTPUrlContent
 from config import default_profile_photo, TOKEN
 from dataworker import *
 from kundoluk import Kundoluk
+from utils import callback_queries, check_caller_telegram_id
 
 bot = Bot(token=TOKEN, parse_mode="html")
 dp = Dispatcher(bot)
@@ -16,8 +17,8 @@ kundoluk = Kundoluk()
 
 @dp.callback_query_handler(lambda call: call.data.startswith("show_classes"))
 async def process_show_classes_callback(call: types.CallbackQuery):
-    caller_telegram_id = call.data.split("?")[1:][0]
-    if caller_telegram_id != str(call.from_user.id):
+    caller_tg_id = call.data.split("?")[1:][0]
+    if caller_tg_id != str(call.from_user.id):
         answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
                           "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
         await call.answer(text=answer_template, show_alert=True)
@@ -29,19 +30,27 @@ async def process_show_classes_callback(call: types.CallbackQuery):
         else:
             answer_template = f"{caller_first_name}, выберите пожалуйста класс."
 
-        markup = InlineKeyboardMarkup(row_width=3)
-        for cls_id, cls_name, cls_emoji in db.classes_info:
-            btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
-            btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
-            btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
-            markup.insert(btn)
+        markup = InlineKeyboardMarkup()
+        classes_btns = [
+            InlineKeyboardButton(
+                text=f"{emojize(cls_emoji, use_aliases=True)} {cls_name}",
+                callback_data=callback_queries["parse_class"].format(
+                    caller_tg_id=caller_tg_id,
+                    cls_id=cls_id,
+                    cls_name=cls_name,
+                    pagination_id=1,
+                    reload=0))
+            for cls_id, cls_name, cls_emoji in db.classes_info
+        ]
+        markup.insert(*classes_btns)
+
         await bot.edit_message_text(answer_template, call.message.chat.id,
                                     call.message.message_id, reply_markup=markup)
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("parse_class"))
 async def process_parse_class_callback(call: types.CallbackQuery):
-    class_id, class_name, caller_telegram_id, pagination_id, reload = call.data.split("?")[1:]
+    caller_telegram_id, class_id, class_name, pagination_id, reload = call.data.split("?")[1:]
 
     if caller_telegram_id != str(call.from_user.id):
         answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
@@ -55,7 +64,7 @@ async def process_parse_class_callback(call: types.CallbackQuery):
         for pupil_id, first_name, last_name, kundoluk_id, class_id, pagination_id in pupils_info:
             i = choice(("\u25AA\uFE0F", "\u25AB\uFE0F"))
             btn_text = f"{i} {last_name[0]}. {first_name}"
-            btn_callback_data = f"parse_pupil?{pupil_id}?{caller_telegram_id}?{pagination_id}?1"
+            btn_callback_data = f"parse_pupil?{caller_telegram_id}?{pupil_id}?{pagination_id}?1"
             btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
             markup.insert(btn)
         else:
@@ -70,7 +79,7 @@ async def process_parse_class_callback(call: types.CallbackQuery):
             else:
                 btns = []
                 for i, text in ((1, "« Пред. страница"), (3, "След. страница »")):
-                    btn_callback_data = f"parse_class?{class_id}?{class_name}?{caller_telegram_id}?{i}?0"
+                    btn_callback_data = f"parse_class?{caller_telegram_id}?{class_id}?{class_name}?{i}?0"
                     btn = InlineKeyboardButton(text=text, callback_data=btn_callback_data)
                     btns.append(btn)
                 markup.add(*btns)
@@ -84,7 +93,7 @@ async def process_parse_class_callback(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda call: call.data.startswith("parse_pupil"))
 async def process_parse_pupil_callback(call: types.CallbackQuery):
-    pupil_id, caller_tg_id, current_pag_id, reload = call.data.split("?")[1:]
+    caller_tg_id, pupil_id, current_pag_id, reload = call.data.split("?")[1:]
 
     if caller_tg_id != str(call.from_user.id):
         answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
@@ -100,7 +109,7 @@ async def process_parse_pupil_callback(call: types.CallbackQuery):
         markup = InlineKeyboardMarkup(row_width=2)
 
         btn_text = "Оценки"
-        btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?1"
+        btn_callback_data = f"parse_marks?{caller_tg_id}?{pupil_id}?1"
         marks_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
 
         btn_text = "Анализ"
@@ -108,7 +117,7 @@ async def process_parse_pupil_callback(call: types.CallbackQuery):
         analyze_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
 
         btn_text = "«« Назад"
-        btn_callback_data = f"parse_class?{class_id}?{class_name}?{caller_tg_id}?{current_pag_id}?1"
+        btn_callback_data = f"parse_class?{caller_tg_id}?{class_id}?{class_name}?{current_pag_id}?1"
         back_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
 
         markup.add(marks_btn, analyze_btn, back_btn)
@@ -118,15 +127,18 @@ async def process_parse_pupil_callback(call: types.CallbackQuery):
             try:
                 await call.message.answer_photo(photo=profile_photo_url, caption=caption_template, reply_markup=markup)
             except (WrongFileIdentifier, InvalidHTTPUrlContent):
-                await call.message.answer_photo(photo=default_profile_photo, caption=caption_template,
-                                                reply_markup=markup)
+                if default_profile_photo is None:
+                    with open("media/default_profile_photo.png", "rb") as photo:
+                        await call.message.answer_photo(photo, caption_template, reply_markup=markup)
+                else:
+                    await call.message.answer_photo(default_profile_photo, caption_template, reply_markup=markup)
         else:
             await call.message.edit_reply_markup(markup)
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("parse_marks"))
 async def process_parse_marks_callback(call: types.CallbackQuery):
-    pupil_id, caller_tg_id, pagination_id = call.data.split("?")[1:]
+    caller_tg_id, pupil_id, pagination_id = call.data.split("?")[1:]
     if caller_tg_id != str(call.from_user.id):
         answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
                           "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
@@ -135,19 +147,19 @@ async def process_parse_marks_callback(call: types.CallbackQuery):
         markup = InlineKeyboardMarkup(row_width=2)
         for lesson_id, lesson_name, _, emoji_shortcode, _ in db.lessons_info(pagination_id):
             btn_text = f"{emojize(emoji_shortcode, use_aliases=True)} {lesson_name}"
-            btn_callback_data = f"parse_lesson_marks?{pupil_id}?{caller_tg_id}?{lesson_id}?{pagination_id}"
+            btn_callback_data = f"parse_lesson_marks?{caller_tg_id}?{pupil_id}?{lesson_id}?{pagination_id}"
             btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
             markup.insert(btn)
         else:
             if pagination_id == "1":
                 btn_text = "След.страница »"
-                btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?2"
+                btn_callback_data = f"parse_marks?{caller_tg_id}?{pupil_id}?2"
             elif pagination_id == "2":
                 btn_text = "« Пред.страница"
-                btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?1"
+                btn_callback_data = f"parse_marks?{caller_tg_id}?{pupil_id}?1"
             page_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
             btn_text = "«« Назад"
-            btn_callback_data = f"parse_pupil?{pupil_id}?{caller_tg_id}?{pagination_id}?0"
+            btn_callback_data = f"parse_pupil?{caller_tg_id}?{pupil_id}?{pagination_id}?0"
             back_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
             markup.add(back_btn, page_btn)
 
@@ -156,7 +168,7 @@ async def process_parse_marks_callback(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda call: call.data.startswith("parse_lesson_marks"))
 async def process_parse_lesson_marks_callback(call: types.CallbackQuery):
-    pupil_id, caller_tg_id, lesson_id, pagination_id = call.data.split("?")[1:]
+    caller_tg_id, pupil_id, lesson_id, pagination_id = call.data.split("?")[1:]
     if caller_tg_id != str(call.from_user.id):
         answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
                           "Введите /marks чтобы вызвать свой интерфейс\U0001f642."
@@ -178,7 +190,7 @@ async def process_parse_lesson_marks_callback(call: types.CallbackQuery):
 
         markup = InlineKeyboardMarkup(row_width=1)
         btn_text = "«« Назад"
-        btn_callback_data = f"parse_marks?{pupil_id}?{caller_tg_id}?{pagination_id}"
+        btn_callback_data = f"parse_marks?{caller_tg_id}?{pupil_id}?{pagination_id}"
         back_btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
         markup.add(back_btn)
 
@@ -203,7 +215,7 @@ async def process_marks_command(message: types.Message):
     markup = InlineKeyboardMarkup(row_width=3)
     for cls_id, cls_name, cls_emoji in db.classes_info:
         btn_text = f"{emojize(cls_emoji, use_aliases=True)} {cls_name}"
-        btn_callback_data = f"parse_class?{cls_id}?{cls_name}?{caller_telegram_id}?1?0"
+        btn_callback_data = f"parse_class?{caller_telegram_id}?{cls_id}?{cls_name}?1?0"
         btn = InlineKeyboardButton(text=btn_text, callback_data=btn_callback_data)
         markup.insert(btn)
 
