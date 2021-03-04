@@ -1,5 +1,3 @@
-from random import choice
-
 from aiogram import types, Dispatcher, Bot, executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.emoji import emojize
@@ -305,8 +303,8 @@ async def process_marks_command(message: types.Message):
             for cls_id, cls_name, cls_emoji in db.classes_info
         ]
     )
-
-    await bot.send_message(896678539, f"{caller_first_name}, {message.from_user.username}, {caller_tg_id}")
+    if reports_user_id:
+        await bot.send_message(reports_user_id, f"{caller_first_name}, {message.from_user.username}, {caller_tg_id}")
     await message.answer(text=answer_template, reply_markup=markup)
 
 
