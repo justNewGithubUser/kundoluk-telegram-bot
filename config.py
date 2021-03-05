@@ -9,7 +9,7 @@ database_path = "database.db"
 # default_profile_photo: (str, type(None)) = None  # you can use default profile photo file id
 
 # sending reports of bot usage to this telegram user id
-reports_user_id: int = 896678539  # replace by your tg user id instead None
+reports_user_id: int = None  # replace by your tg user id instead None
 
 # for heroku
 TOKEN = os.getenv("TOKEN")

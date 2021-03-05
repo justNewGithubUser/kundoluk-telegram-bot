@@ -279,6 +279,39 @@ async def process_analyze_marks_callback(call: types.CallbackQuery):
     await call.answer("Раздел в доработке :)", show_alert=True)
 
 
+@dp.message_handler(Text(startswith='$'))
+async def process_fast_marks_command(message: types.Message):
+    pupils_info = db.get_pupils_info_all(filter_none_users=True)
+    query = message.text.lower()[1:].split(' ')
+
+    query_matches = []
+    for info in pupils_info:
+        first_name = info[1].lower().replace(' ', '')
+        if first_name == query[0]:
+            query_matches.append(info)
+    else:
+        if query_matches:
+            markup = InlineKeyboardMarkup(row_width=1)
+            markup.add(
+                *[
+                    InlineKeyboardButton(
+                        text=f"{last_name} {first_name}, {db.get_class_name(class_id)}",
+                        callback_data=callback_queries['parse_pupil'].format(
+                            caller_tg_id=message.from_user.id,
+                            pupil_id=pupil_id,
+                            pagination_id=1,
+                            reload=1
+                        )
+                    )
+                    for pupil_id, first_name, last_name, kundoluk_id, class_id, _ in query_matches
+                ]
+            )
+
+            await message.reply("Обнаружены совпадения", reply_markup=markup)
+        else:
+            await message.reply("Совпадений не обнаружено\nДля поиска введите <code>$имя</code>")
+
+
 @dp.message_handler(Command('marks'))
 async def process_marks_command(message: types.Message):
     caller_tg_id = message.from_user.id
