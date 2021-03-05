@@ -331,7 +331,7 @@ async def process_fast_marks_command(message: types.Message):
                     callback_data=callback_queries['marks'].format(
                         user_id=pupil_id,
                         data='?'.join(lesson_ids_to_parse)
-                    ) if len(query) > 1 else callback_queries['parse_pupil'].format(
+                    ) if lesson_ids_to_parse else callback_queries['parse_pupil'].format(
                         caller_tg_id=message.from_user.id,
                         pupil_id=pupil_id,
                         pagination_id=1,
