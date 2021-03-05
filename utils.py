@@ -9,6 +9,10 @@ format_maps = {
         ord("\n"): " ",
         ord("\t"): " ",
         ord("\r"): None,
+    },
+    "sings_off": {
+        ord("-"): None,
+        ord("_"): None,
     }
 }
 
@@ -18,7 +22,8 @@ callback_queries = {
     "parse_marks": "parse_marks?{caller_tg_id}?{pupil_id}?{pagination_id}",
     "parse_lesson_marks": "parse_lesson_marks?{caller_tg_id}?{pupil_id}?{lesson_id}?{pagination_id}",
     "analyze_marks": "analyze_marks?{caller_tg_id}?{pupil_id}",
-    "show_classes": "show_classes?{caller_tg_id}"
+    "show_classes": "show_classes?{caller_tg_id}",
+    "marks": "marks?{user_id}?{data}"
 }
 
 warning_answer_template = "Вы не можете использовать кнопки, вызванные другим пользователем.\n\n" \
