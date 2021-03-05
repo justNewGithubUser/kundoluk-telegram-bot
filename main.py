@@ -322,7 +322,7 @@ async def process_fast_marks_command(message: types.Message):
         lessons_to_parse = set(query[1:]) & {info[1] for info in lessons_info}
         lesson_ids_to_parse = {str(lesson_id) for lesson_id, lesson_name in lessons_info
                                if lesson_name in lessons_to_parse}
-
+        print(len(query))
         markup = InlineKeyboardMarkup(row_width=1)
         markup.add(
             *[
@@ -331,6 +331,11 @@ async def process_fast_marks_command(message: types.Message):
                     callback_data=callback_queries['marks'].format(
                         user_id=pupil_id,
                         data='?'.join(lesson_ids_to_parse)
+                    ) if len(query) > 1 else callback_queries['parse_pupil'].format(
+                        caller_tg_id=message.from_user.id,
+                        pupil_id=pupil_id,
+                        pagination_id=1,
+                        reload=1
                     )
                 )
                 for pupil_id, first_name, last_name, kundoluk_id, class_id, _ in query_matches
@@ -356,14 +361,14 @@ async def process_lessons_command(message: types.Message):
 
 @dp.message_handler(Command('fast_search_help'))
 async def process_fast_search_help_command(message: types.Message):
-    message_template = "Бот поддерживает быстрый просмотр оценок с помощью команд.\n\n"\
-                       "Чтобы совершить быстрый поиск, введите:\n<code>$имя-человека</code>\n"\
-                       "(если имя состоит из двух или более слов,"\
-                       " напишите слитно или используйте тире/нижнее подчеркивание)\n\n"\
-                       "Также можно сразу указать, по каким урокам нужно посмотреть оценки:\n"\
-                       "<code>$имя-человека название-урока-1</code>,\n"\
-                       "можно также указать несколько уроков:\n"\
-                       "<code>$имя-человека название-урока-1 название-урока-2 ...</code>\n\n"\
+    message_template = "Бот поддерживает быстрый просмотр оценок с помощью команд.\n\n" \
+                       "Чтобы совершить быстрый поиск, введите:\n<code>$имя-человека</code>\n" \
+                       "(если имя состоит из двух или более слов," \
+                       " напишите слитно или используйте тире/нижнее подчеркивание)\n\n" \
+                       "Также можно сразу указать, по каким урокам нужно посмотреть оценки:\n" \
+                       "<code>$имя-человека название-урока-1</code>,\n" \
+                       "можно также указать несколько уроков:\n" \
+                       "<code>$имя-человека название-урока-1 название-урока-2 ...</code>\n\n" \
                        "Посмотреть названия всех уроков можно введя команду /lessons"
 
     await message.reply(message_template)

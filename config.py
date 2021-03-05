@@ -3,9 +3,9 @@ import os
 database_path = "database.db"
 
 # for local development
-# TOKEN: str = ""
-# kundoluk_login: str = ""
-# kundoluk_password: str = ""
+# TOKEN: str = "1561460809:AAErXbVX-EAxZKlks_S26hnUiBnUl1b5wOk"
+# kundoluk_login: str = "205719304"
+# kundoluk_password: str = "1843"
 # default_profile_photo: (str, type(None)) = None  # you can use default profile photo file id
 # bot_username = "abrakadabramybottestbot"
 
