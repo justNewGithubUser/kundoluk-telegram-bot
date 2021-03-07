@@ -6,7 +6,7 @@ from aiogram.utils.exceptions import WrongFileIdentifier, InvalidHTTPUrlContent,
     MessageNotModified, MessageToDeleteNotFound
 
 from utils import callback_queries, check_caller_telegram_id, format_maps
-from config import default_profile_photo, TOKEN, reports_user_id
+from config import TOKEN, reports_user_id
 from kundoluk import Kundoluk
 from dataworker import *
 
@@ -171,11 +171,8 @@ async def process_parse_pupil_callback(call: types.CallbackQuery):
         try:
             await call.message.answer_photo(photo=profile_photo_url, caption=caption_template, reply_markup=markup)
         except (WrongFileIdentifier, InvalidHTTPUrlContent):
-            if default_profile_photo is None:
-                with open("media/default_profile_photo.png", "rb") as photo:
-                    await call.message.answer_photo(photo, caption_template, reply_markup=markup)
-            else:
-                await call.message.answer_photo(default_profile_photo, caption_template, reply_markup=markup)
+            with open("media/default_profile_photo.png", "rb") as photo:
+                await call.message.answer_photo(photo, caption_template, reply_markup=markup)
     else:
         try:
             await call.message.edit_reply_markup(markup)
